@@ -86,6 +86,7 @@ class PPUDumpSummaryParser:
         current_class: Optional[str] = None
         current_property: Optional[Dict[str, Any]] = None
         current_symbol: Optional[Dict[str, str]] = None
+        current_enum_symbol: Optional[Dict[str, str]] = None
 
         for raw_line in text.splitlines():
             line = raw_line.strip()
@@ -104,6 +105,7 @@ class PPUDumpSummaryParser:
                 self._defs[current_def["id"]] = current_def
                 current_property = None
                 current_symbol = None
+                current_enum_symbol = None
                 continue
 
             if current_def and not current_def["kind"] and line in DEFINITION_LABELS:
@@ -152,7 +154,18 @@ class PPUDumpSummaryParser:
             symbol_id_match = re.match(r"\*\* Symbol Id (\d+) \*\*", line)
             if symbol_id_match:
                 current_symbol = {"id": symbol_id_match.group(1), "name": "", "visibility": ""}
+                current_enum_symbol = None
                 current_property = None
+                continue
+
+            enum_match = re.search(r"Enumeration symbol\s+(.+)$", line)
+            if enum_match and current_def is not None and current_def.get("kind") == "Enumeration type definition":
+                current_enum_symbol = {"name": enum_match.group(1).strip(), "value": ""}
+                current_def.setdefault("members", []).append(current_enum_symbol)
+                continue
+
+            if current_enum_symbol is not None and line.startswith("Value :"):
+                current_enum_symbol["value"] = line.split(":", 1)[1].strip()
                 continue
 
             type_match = self.TYPE_SYM_RE.search(line)
@@ -320,6 +333,15 @@ class PPUDumpSummaryParser:
             largest = details.get("largest", "")
             size = details.get("size", "")
             parts = []
+            members = definition.get("members", [])
+            if members:
+                parts.append(
+                    "members "
+                    + ", ".join(
+                        f"{member['name']}={member['value']}" if member.get("value") else member["name"]
+                        for member in members
+                    )
+                )
             if smallest or largest:
                 parts.append(f"values {smallest}..{largest}")
             if size:
@@ -362,6 +384,12 @@ class PPUDumpSummaryParser:
             range_text = details.get("range", "")
             return f"ordinal ({base}, range {range_text})" if range_text else f"ordinal ({base})"
         if kind == "Enumeration type definition":
+            members = definition.get("members", [])
+            if members:
+                return "enum (" + ", ".join(
+                    f"{member['name']}={member['value']}" if member.get("value") else member["name"]
+                    for member in members
+                ) + ")"
             smallest = details.get("smallest", "")
             largest = details.get("largest", "")
             return f"enum ({smallest}..{largest})" if smallest or largest else "enum"
