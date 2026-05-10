@@ -8,7 +8,7 @@ class TCollection extends Array/* <TCollectionItem> */ {
 }
 
 class TSymbol extends String {};
-class TSymbols extends Array {};
+export class TSymbols extends Array {};
 
 class TSet extends Set/* <string>  */{}
 
@@ -19,7 +19,12 @@ function symbols(values) {
 }
 
 function property(type, defaultValue) {
-    return { type, defaultValue };
+    return { type, defaultValue }; //? String, Boolean = lost on json.stringify!
+    return { 
+        // type: typeof type === 'function' ? type.name : type,
+        type: type.name,
+        defaultValue 
+    };
 }
 
 function setOf(values) {
