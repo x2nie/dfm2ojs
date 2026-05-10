@@ -1,0 +1,23 @@
+File: unit1.ppu
+
+Uses (4):
+  - System
+  - objpas
+  - Classes
+  - sysutils
+
+Declared Types, excluding classes and $vmt (2):
+  - TFooMode: enumeration = values 0..2, size 4 [public] ((1762) DefId 0)
+  - TFooOptions: set = set of TFooMode [public] ((1786) DefId 1)
+
+Classes with published properties (2):
+  - TFoo < (57) Unit 1, DefId 270
+      published property Count: (105) Unit 0, DefId 10, default=7
+      published property Enabled: (136) Unit 0, DefId 15, default=1
+      published property Mode: TFooMode ((167) DefId 0), default=1
+      published property Name: (195) Unit 0, DefId 28, default=0
+      published property Options: TFooOptions ((226) DefId 1), default=-2147483648
+  - TBar < TFoo
+      published property Level: (1274) Unit 0, DefId 10, default=3
+      published property Title: (1305) Unit 0, DefId 28, default=0
+      published property Visible: (1336) Unit 0, DefId 15, default=0
